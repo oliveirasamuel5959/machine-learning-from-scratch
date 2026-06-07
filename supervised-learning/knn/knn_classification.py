@@ -16,7 +16,7 @@ from modules.Plots import plot_confusion_matrix, plot_data, plot_decision_bounda
 from modules.KNN import KNN
 
 ROOT_DIR = Path(__file__).parent.parent.parent
-OUTPUT_DIR = ROOT_DIR / 'outputs-results' / 'knn_classification'
+OUTPUT_DIR = ROOT_DIR / 'outputs-results' / 'knn-classification'
 
 print(f"Current working directory: {ROOT_DIR}")
 
