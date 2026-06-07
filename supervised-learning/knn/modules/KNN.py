@@ -32,10 +32,13 @@ class KNN:
     k_indices = np.argsort(distances)[:self.k]
     
     # Extract the labels of the k nearest neighbor training samples
-    k_nearest_labels = [self.y_train[i] for i in k_indices]
+    k_nearest_neighbors = [self.y_train[i] for i in k_indices]
     
-    # return the most common class label
-    most_common = Counter(k_nearest_labels).most_common(1)
-    # print("most_common:", most_common[0][0])
+    # For regression, return the mean of the k nearest neighbors
+    if self.type == 'regression':
+      return np.mean(k_nearest_neighbors)
     
-    return most_common[0][0]
+    # For classification, return the most common class label among the neighbors
+    if self.type == 'classification':
+      most_common = Counter(k_nearest_neighbors).most_common(1)
+      return most_common[0][0]
