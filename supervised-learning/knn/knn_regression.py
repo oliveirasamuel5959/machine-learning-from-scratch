@@ -12,7 +12,8 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
 from ucimlrepo import fetch_ucirepo 
 
-from modules.Plots import plot_regression_results
+from modules.Plots import plot_regression_line, plot_regression_results_all_features
+from modules.utils import save_metrics
 from modules.KNN import KNN
 
 
@@ -51,16 +52,16 @@ def main():
   # ------------------
   df = pd.DataFrame(X, columns=data.data.feature_names)
   df['target'] = y
-  print("Original dataset head:")
+  print("\nOriginal dataset head:")
   print(df.head())
 
   # ------------------------------------------
   # Split the data into training and test sets
   # ------------------------------------------
-  X = X.drop(columns=['horsepower', 'model_year', 'origin'])  # Drop the first column (ID)
-  print("X head after dropping columns:")
+  # Drop origin column
+  X = df.drop(columns=['origin'])
+  print("\nX head after dropping 'origin' column:")
   print(X.head())
-  
   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
   
   X_train = np.array(X_train)
@@ -68,19 +69,11 @@ def main():
   y_train = np.array(y_train)
   y_test = np.array(y_test)
   
-  print(f'Training set size: {X_train.shape} and {y_train.shape}')
+  print(f'\nTraining set size: {X_train.shape} and {y_train.shape}')
   print(f'Test set size: {X_test.shape} and {y_test.shape}')
   
-  # --------------------
-  # Data Normalization
-  # --------------------
-  sc = StandardScaler()
-  X_train = sc.fit_transform(X_train)
-  X_test = sc.transform(X_test)
-  
-  
   # --------------
-  # Model 
+  # Build Model 
   # --------------
   # knn = KNeighborsRegressor(n_neighbors=3, metric='euclidean')
   knn = KNN(k=3, distance_metric='euclidean', type='regression')
@@ -89,9 +82,16 @@ def main():
   # TRAIN k-fold cross-validation
   # ------------------------------
   for i, (train_idx, test_idx) in enumerate(KFold(n_splits=5, shuffle=True, random_state=42).split(X_train)):
-    knn.fit(X_train[train_idx], y_train[train_idx])
-    y_pred = knn.predict(X_train[test_idx])
-    
+    # Data Normalization
+    scaler = StandardScaler()
+    X_fold_train = scaler.fit_transform(X_train[train_idx])
+    X_fold_test = scaler.transform(X_train[test_idx])
+
+    # Fit the model and predict
+    knn.fit(X_fold_train, y_train[train_idx])
+    y_pred = knn.predict(X_fold_test)
+
+    # Calculate metrics
     mse = mean_squared_error(y_train[test_idx], y_pred)
     mae = mean_absolute_error(y_train[test_idx], y_pred)
     r2 = r2_score(y_train[test_idx], y_pred)
@@ -102,24 +102,43 @@ def main():
     result_r2.append(r2)
     result_mape.append(mape)
   
-  print(f'Mean Squared Error: {np.mean(result_mse):.2f}')
-  print(f'Root Mean Squared Error: {np.sqrt(np.mean(result_mse)):.2f}')
-  print(f'Mean Absolute Error: {np.mean(result_mae):.2f}')
-  print(f'Mean Absolute Percentage Error: {np.mean(result_mape):.2f}%')
-  print(f'R^2 Score: {np.mean(result_r2):.2f}')
+  print("\n── Cross-Validation Results ──")
+  print(f"MSE : {np.mean(result_mse):.2f} ± {np.std(result_mse):.2f}")
+  print(f'RMSE: {np.sqrt(np.mean(result_mse)):.2f}')
+  print(f"MAE : {np.mean(result_mae):.2f} ± {np.std(result_mae):.2f}")
+  print(f"R²  : {np.mean(result_r2):.2f} ± {np.std(result_r2):.2f}")
+  print(f"MAPE: {np.mean(result_mape):.2f}% ± {np.std(result_mape):.2f}%")
+  
+  save_metrics(
+    mse=np.mean(result_mse), 
+    mae=np.mean(result_mae), 
+    r2=np.mean(result_r2), 
+    mape=np.mean(result_mape), 
+    outdir=OUTPUT_DIR
+  )
   
   # ----------------------------
   # Plot results
   # ----------------------------
+  final_scaler = StandardScaler()
+  X_train_scaled = final_scaler.fit_transform(X_train)
+  X_test_scaled  = final_scaler.transform(X_test)
+
+  knn.fit(X_train_scaled, y_train)
+  y_pred = knn.predict(X_test_scaled)
   
-  y_pred = knn.predict(X_test)
-  
-  plot_regression_results(
-    X_train=sc.inverse_transform(X_train), 
+  plot_regression_results_all_features(
+    X_train=X_train, 
     y_train=y_train, 
-    X_test=sc.inverse_transform(X_test), 
+    X_test=X_test, 
     y_test=y_test, 
     y_pred=y_pred,
+    outdir=OUTPUT_DIR
+  )
+  
+  plot_regression_line(
+    y_test=y_test, 
+    y_pred=y_pred, 
     outdir=OUTPUT_DIR
   )
   

@@ -64,6 +64,8 @@ def plot_decision_boundary(X, y, model):
   plt.ylabel('Feature 2')
   plt.title('KNN Decision Boundary')
   plt.show()
+  
+  
 
 # ----------------------------------------------
 # Visualization Functions for KNN Regression
@@ -81,23 +83,72 @@ def plot_original_data(X, y, outdir=None):
     
   plt.legend()
   plt.show()
-  
-def plot_regression_results(X_train, y_train, X_test, y_test, y_pred, outdir=None):
+
+def plot_regression_line(y_test, y_pred, outdir=None):
   plt.figure(figsize=(10, 6))
-  
-  # Plot the training data points
-  plt.scatter(X_train[:, 3], y_train, label="Training Data", color="blue")
-  # Plot the test data points and their predictions
-  plt.scatter(X_test[:, 3], y_test, label="Test Predictions", color="green", marker="o")
-  # Plot the predicted values for the test set
-  plt.scatter(X_test[:, 3], y_pred, label="Predicted Values", color="red", marker="x")
-  
-  plt.title(f"KNN Regression Results")
-  plt.xlabel("Acceleration")
-  plt.ylabel("Fuel Consumption")
-  plt.legend()
+  plt.scatter(y_test, y_pred, color="red", label="Predicted vs Actual")
+  plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=2, label="Ideal Fit")
+  plt.title("KNN Regression: Predicted vs Actual")
+  plt.xlabel("Actual Values")
+  plt.ylabel("Predicted Values")
   
   if outdir:
-    plt.savefig(outdir / "knn_regression_results.png")
-    print(f"Plot saved to: {outdir / 'knn_regression_results.png'}")
+    plt.savefig(outdir / "regression_line.png")
+    print(f"Plot saved to: {outdir / 'regression_line.png'}")
+    
+  plt.legend()
+  plt.show()
+  
+def plot_regression_results_all_features(X_train, y_train, X_test, y_test, y_pred, outdir=None):
+  feature_names = [
+      "Cylinders",
+      "Displacement (in³)",
+      "Horsepower (HP)",
+      "Weight (lbs)",
+      "Time to Acceleration from 0 to 60 mph (s)",
+      "Model Year"
+  ]
+
+  fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+  axes = axes.flatten()
+
+  for i, ax in enumerate(axes):
+    # Training data
+    ax.scatter(
+      X_train[:, i],
+      y_train,
+      label="Train",
+      alpha=0.6
+    )
+
+    # Actual test values
+    ax.scatter(
+      X_test[:, i],
+      y_test,
+      label="Test",
+      alpha=0.6
+    )
+
+    # Predicted values
+    ax.scatter(
+      X_test[:, i],
+      y_pred,
+      marker="x",
+      label="Prediction"
+    )
+
+    ax.set_title(feature_names[i])
+    ax.set_xlabel(feature_names[i])
+    ax.set_ylabel("Miles Per Gallon")
+
+  # Single legend for entire figure
+  handles, labels = axes[0].get_legend_handles_labels()
+  fig.legend(handles, labels, loc="upper center", ncol=3)
+
+  plt.tight_layout(rect=[0, 0, 1, 0.95])
+  
+  if outdir:
+    plt.savefig(outdir / "regression_results.png")
+    print(f"\n[OK] Plot saved to: {outdir / 'regression_results.png'}")
+    
   plt.show()
