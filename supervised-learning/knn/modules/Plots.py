@@ -101,12 +101,12 @@ def plot_regression_line(y_test, y_pred, outdir=None):
   
 def plot_regression_results_all_features(X_train, y_train, X_test, y_test, y_pred, outdir=None):
   feature_names = [
-      "Cylinders",
-      "Displacement (in³)",
-      "Horsepower (HP)",
-      "Weight (lbs)",
-      "Time to Acceleration from 0 to 60 mph (s)",
-      "Model Year"
+    "Displacement (in³)",
+    "Cylinders",
+    "Horsepower (HP)",
+    "Weight (lbs)",
+    "Time to Acceleration from 0 to 60 mph (s)",
+    "Model Year"
   ]
 
   fig, axes = plt.subplots(2, 3, figsize=(14, 8))
