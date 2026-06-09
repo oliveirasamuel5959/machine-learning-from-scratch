@@ -1,7 +1,8 @@
 import numpy as np
-from collections import Counter
 
-class KNN:
+from sklearn.base import BaseEstimator
+from collections import Counter
+class KNN(BaseEstimator):
   def __init__(self, k=3, distance_metric='euclidean', type='classification'):
     self.k = k
     self.distance_metric = distance_metric

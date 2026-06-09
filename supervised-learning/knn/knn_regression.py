@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pathlib import Path
 
-from sklearn import datasets
+from sklearn.base import clone
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold, cross_val_score
@@ -81,21 +81,32 @@ def main():
   # ------------------------------
   # TRAIN k-fold cross-validation
   # ------------------------------
-  for i, (train_idx, test_idx) in enumerate(KFold(n_splits=5, shuffle=True, random_state=42).split(X_train)):
+  kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+  
+  for i, (train_idx, test_idx) in enumerate(kfold.split(X_train)):
+    # Create a fresh clone of the KNN model for each fold to ensure independence
+    clone_knn = clone(knn)
+    
     # Data Normalization
     scaler = StandardScaler()
+    
+    # Create fold-specific training and test sets
     X_fold_train = scaler.fit_transform(X_train[train_idx])
+    y_fold_train = y_train[train_idx]
     X_fold_test = scaler.transform(X_train[test_idx])
+    y_fold_test = y_train[test_idx]
 
     # Fit the model and predict
-    knn.fit(X_fold_train, y_train[train_idx])
-    y_pred = knn.predict(X_fold_test)
+    clone_knn.fit(X_fold_train, y_fold_train)
+    y_pred = clone_knn.predict(X_fold_test)
 
     # Calculate metrics
-    mse = mean_squared_error(y_train[test_idx], y_pred)
-    mae = mean_absolute_error(y_train[test_idx], y_pred)
-    r2 = r2_score(y_train[test_idx], y_pred)
-    mape = mean_absolute_percentage_error(y_train[test_idx], y_pred)
+    mse = mean_squared_error(y_fold_test, y_pred)
+    mae = mean_absolute_error(y_fold_test, y_pred)
+    r2 = r2_score(y_fold_test, y_pred)
+    mape = mean_absolute_percentage_error(y_fold_test, y_pred)
+    
+    print(f"\nFold {i+1} - MSE: {mse:.2f}, MAE: {mae:.2f}, R²: {r2:.2f}, MAPE: {mape:.2f}%")
 
     result_mse.append(mse)
     result_mae.append(mae)
