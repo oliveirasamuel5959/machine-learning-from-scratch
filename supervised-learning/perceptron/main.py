@@ -3,9 +3,9 @@ from modules.Perceptron import Perceptron
 
 def main():
   X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-  y = np.array([0, 0, 0, 1])  # AND gate
+  y = np.array([0, 1, 1, 1])  # OR gate
 
-  perceptron = Perceptron(learning_rate=0.1, epochs=1000)
+  perceptron = Perceptron(learning_rate=0.01, epochs=2000)
   perceptron.fit(X, y)
 
   test_cases = [[0, 0], [0, 1], [1, 0], [1, 1]]

@@ -48,12 +48,13 @@ class Perceptron:
       dloss/db = -1/n * sum(y - y_predicted)
       '''
       
+      # Calculate gradients for weights and bias
       dloss_dw = -np.dot(X.T, error) / n_samples
       dloss_db = -np.sum(error) / n_samples
       
       # Update weights and bias
-      self.weights += self.learning_rate * dloss_dw
-      self.bias += self.learning_rate * dloss_db
+      self.weights -= self.learning_rate * dloss_dw
+      self.bias -= self.learning_rate * dloss_db
       
       # Log with the correct loss function
       if (epoch + 1) % 100 == 0:
