@@ -31,9 +31,29 @@ class Perceptron:
       # Calculate the error
       error = y - y_predicted
       
-      # Update weights and bias (gradient descent)
-      self.weights += self.learning_rate * np.dot(X.T, error) / n_samples
-      self.bias += self.learning_rate * np.sum(error) / n_samples
+      '''
+      loss change w.r.t weights and bias using BCE loss
+      
+      loss = -1/n * sum(y*log(y^) + (1-y)*log(1-y^))
+      y^ = activation(z) where z = wX + b
+      
+      dloss/dw = dloss/dy^ * dy^/dz * dz/dw
+      dloss/db = dloss/dy^ * dy^/dz * dz/db
+      
+      dy^/dz = y^ * (1 - y^)  # derivative of sigmoid
+      dz/dw = X
+      dz/db = 1
+      
+      dloss/dw = -1/n * X^T * (y - y_predicted)
+      dloss/db = -1/n * sum(y - y_predicted)
+      '''
+      
+      dloss_dw = -np.dot(X.T, error) / n_samples
+      dloss_db = -np.sum(error) / n_samples
+      
+      # Update weights and bias
+      self.weights += self.learning_rate * dloss_dw
+      self.bias += self.learning_rate * dloss_db
       
       # Log with the correct loss function
       if (epoch + 1) % 100 == 0:
