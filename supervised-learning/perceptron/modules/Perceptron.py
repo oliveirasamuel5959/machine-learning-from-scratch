@@ -12,6 +12,7 @@ class Perceptron:
   
   def _binary_cross_entropy(self, y, y_predicted):
     # L=−1/n ∑[ylog(y^​)+(1−y)log(1−y^​)]
+    # Logistic Regression - Logistic Loss - Binary Cross-Entropy Loss
     
     # Clip to avoid log(0)
     eps = 1e-15
