@@ -12,8 +12,8 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from ucimlrepo import fetch_ucirepo 
 
-from modules.Plots import plot_confusion_matrix, plot_data, plot_decision_boundary, plot_inference
-from modules.KNN import KNN
+from mlscratch.supervised_learning.knn.modules.Plots import plot_confusion_matrix, plot_data, plot_decision_boundary, plot_inference
+from mlscratch.supervised_learning.knn.modules.KNN import KNN
 
 ROOT_DIR = Path(__file__).parent.parent.parent
 OUTPUT_DIR = ROOT_DIR / 'outputs-results' / 'knn-classification'

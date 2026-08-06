@@ -1,5 +1,5 @@
 import numpy as np
-from modules.Perceptron import Perceptron
+from mlscratch.supervised_learning.perceptron.modules.Perceptron import Perceptron
 
 def main():
   X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])

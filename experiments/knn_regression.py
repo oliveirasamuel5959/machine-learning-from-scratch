@@ -12,9 +12,9 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
 from ucimlrepo import fetch_ucirepo 
 
-from modules.Plots import plot_regression_line, plot_regression_results_all_features
-from modules.utils import save_metrics
-from modules.KNN import KNN
+from mlscratch.supervised_learning.knn.modules.Plots import plot_regression_line, plot_regression_results_all_features
+from mlscratch.supervised_learning.knn.modules.utils import save_metrics
+from mlscratch.supervised_learning.knn.modules.KNN import KNN
 
 
 # Percentual Means Absolute Error
