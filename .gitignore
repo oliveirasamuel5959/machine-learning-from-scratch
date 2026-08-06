@@ -19,7 +19,6 @@
 *.tgz
 *.rar
 data/
-datasets/
 downloads/
 
 # TensorBoard, Weights & Biases, and training logs
