@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 
-from mlscratch.deep_learning.dataset_download import build_dataset
+from mlscratch.deep_learning.datasets.dataset_download import build_dataset
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"

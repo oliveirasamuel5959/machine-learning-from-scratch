@@ -1,16 +1,17 @@
 import os
 import argparse
 import time
-import tqdm
+from tqdm import tqdm
 from pathlib import Path
 
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from mlscratch.deep_learning.dataset_download import build_dataset
+from mlscratch.deep_learning.datasets.dataset_download import build_dataset
 from mlscratch.common.logger import get_logger
-from mlscratch.deep_learning.models.mlp import build_model
+from mlscratch.deep_learning.models.mlp import MLP
+from mlscratch.deep_learning.train import train
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -30,26 +31,29 @@ def main():
   torch.manual_seed(args.seed)
   
   # Note: Initializing an **untrained** model
-  model = build_model()
+  model = MLP(num_classes=62)
   model = model.to(device)
   
   LOGGER.info(f"Training {sum(p.numel() for p in model.parameters())} model parameters")
   
-  model = torch.compile(model)
+  # model = torch.compile(model)
   
   LOGGER.info(f"Initialized model uses {get_mem_stats(device)['curr_alloc_gb']}gb")
   
   train_dataset, test_dataset = build_dataset(data_dir=DATA_DIR)
-  LOGGER.debug(f"{len(train_dataset)} training samples")
-  LOGGER.debug(f"{len(test_dataset)} training samples")
+  LOGGER.info(f"{len(train_dataset)} training samples")
+  LOGGER.info(f"{len(test_dataset)} test samples")
   
   train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=1)
   test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
   
-  LOGGER.info(f"{len(train_loader)} batches per epoch")
-  LOGGER.info(f"{len(test_loader)} batches per epoch")
+  image, label = next(iter(train_loader)) 
+                      
+  LOGGER.info(f"{len(train_loader)} batches per epoch with image and label shape {image.shape}, {label.shape}")
+  LOGGER.info(f"{len(test_loader)} batches per epoch with image and label shape {image.shape}, {label.shape}")
   
   optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, fused=True)
+  loss_fn = nn.CrossEntropyLoss()
   
   lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     optimizer, T_max=1000, eta_min=args.lr * 1e-2
@@ -61,6 +65,27 @@ def main():
     is_experiment = True
     exp_dir = exp_dir / args.experiment_name
     
+  # =========
+  # Train 
+  # =========
+  for epoch in tqdm(range(args.num_epochs)):
+    LOGGER.info(f"Begin epoch {epoch}")
+    
+    train_loss, train_acc = train(
+      model=model,
+      dataloader=train_loader,
+      loss_fn=loss_fn,
+      opitmizer=optimizer,
+      device=device
+    )
+    
+    # Print out training
+    print(
+      f"Epoch: {epoch+1} | "
+      f"train_loss: {train_loss:.4f} | "
+      f"train_acc: {train_acc:.4f} | "
+    )
+  
 def get_mem_stats(device):
   if device.type != "cuda":
     return {"curr_alloc_gb": 0.0}
