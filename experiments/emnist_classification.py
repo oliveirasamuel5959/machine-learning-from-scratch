@@ -10,8 +10,11 @@ from torch.utils.data import Dataset, DataLoader
 
 from mlscratch.deep_learning.datasets.dataset_download import build_dataset
 from mlscratch.common.logger import get_logger
+from mlscratch.common.metrics import save_metrics, load_to_device, save_model
+
 from mlscratch.deep_learning.models.mlp import MLP
 from mlscratch.deep_learning.train import train
+from mlscratch.deep_learning.eval import eval
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -68,6 +71,13 @@ def main():
   # =========
   # Train 
   # =========
+  results = {
+    "train_loss": [],
+    "train_acc": [],
+    "test_loss": [],
+    "test_acc": []
+  }
+  
   for epoch in tqdm(range(args.num_epochs)):
     LOGGER.info(f"Begin epoch {epoch}")
     
@@ -79,12 +89,33 @@ def main():
       device=device
     )
     
+    val_loss, val_acc = eval(
+      model=model,
+      dataloader=test_loader,
+      loss_fn=loss_fn,
+      device=device
+    )
+    
     # Print out training
     print(
       f"Epoch: {epoch+1} | "
       f"train_loss: {train_loss:.4f} | "
       f"train_acc: {train_acc:.4f} | "
+      f"test_loss: {val_loss:.4f} | "
+      f"test_acc: {val_acc:.4f}"
     )
+    
+    # Update results dictionary
+    results["train_loss"].append(train_loss)
+    results["train_acc"].append(train_acc)
+    results["test_loss"].append(val_loss)
+    results["test_acc"].append(val_acc)
+    
+    if is_experiment:
+      LOGGER.info(f"[OK] Saving checkpoint to {exp_dir} in ckpts.")
+      save_model(model, exp_dir)
+
+  save_metrics(exp_dir, metrics_results=results)
   
 def get_mem_stats(device):
   if device.type != "cuda":
