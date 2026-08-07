@@ -10,10 +10,12 @@ dependencies = [
     "numpy>=2.2.6",
     "pandas>=2.3.3",
     "pillow>=12.3.0",
+    "rich>=15.0.0",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
     "torch>=2.13.0",
     "torchvision>=0.28.0",
+    "tqdm>=4.70.0",
     "ucimlrepo>=0.0.7",
 ]
 
