@@ -55,5 +55,35 @@ def main():
   model_size_mb = (total_params * 4) / (1024 ** 2)
   print(f"Model size: {model_size_mb:.2f} MB")
   
+  print("\n[MODEL] ======= SUMMARY ========")
+  # Iterate through the main blocks
+  for name, block in model.named_children():
+    print(f"Block {name} has a total of {len(list(block.children()))} layers:")
+
+    # List all children layers in the block
+    for idx, layer in enumerate(block.children()):
+      # Check if the layer is terminal (no children) or not
+      if len(list(layer.children())) == 0:
+        print(f"\t {idx} - Layer {layer}")
+        
+      # If the layer has children, it's a sub-block, then print only the number of children and its name
+      else:
+        layer_name = layer._get_name()  # More user-friendly name
+        print(f"\t {idx} - Sub-block {layer_name} with {len(list(layer.children()))} layers")    
+        
+  print(f"\n[MODEL] ======= Zoom into ConvBlock model ========")
+  first_conv_module = model.features[0]
+
+  for idx, module in enumerate(first_conv_module.modules()):
+    # Avoid printing the top-level module itself
+    if idx > 0 :
+      print(module)
+  
+  
+  print(f"\n[MODEL] ======= Layers type Conv2d counts ========")
+  type_layer = nn.Conv2d
+  selected_layers = [layer for layer in model.modules() if isinstance(layer, type_layer)]
+  print(f"Number of {type_layer.__name__} layers: {len(selected_layers)}")
+  
 if __name__ == '__main__':
   main()
