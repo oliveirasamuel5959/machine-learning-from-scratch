@@ -6,9 +6,9 @@ def compute_metrics_and_confmat(y_true, y_pred, output_dir, threshold=0.5):
     # y_pred = (y_probs >= threshold).astype(int)
     
     acc = float(accuracy_score(y_true, y_pred))
-    prec = float(precision_score(y_true, y_pred, zero_division=0))
-    rec = float(recall_score(y_true, y_pred, zero_division=0))
-    f1 = float(f1_score(y_true, y_pred, zero_division=0))
+    prec = float(precision_score(y_true, y_pred, zero_division=0, average='macro'))
+    rec = float(recall_score(y_true, y_pred, zero_division=0, average='macro'))
+    f1 = float(f1_score(y_true, y_pred, zero_division=0, average='macro'))
     
     cm = confusion_matrix(y_true, y_pred)
     tn, fp, fn, tp = int(cm[0,0]), int(cm[0,1]), int(cm[1,0]), int(cm[1,1])

@@ -3,7 +3,7 @@ import torch
 import json
 
 def load_to_device(path, device):
-  return torch.load(path / "ckpts", map_location=device, weights_only=True)
+  return torch.load(path / "ckpts" / "model.pt", map_location=device, weights_only=True)
 
 def save_model(model, path):
   path = path / "ckpts"
