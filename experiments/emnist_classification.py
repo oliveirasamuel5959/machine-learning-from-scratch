@@ -8,13 +8,15 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from mlscratch.deep_learning.datasets.dataset_download import build_dataset
 from mlscratch.common.logger import get_logger
-from mlscratch.common.metrics import save_metrics, load_to_device, save_model
+from mlscratch.deep_learning.datasets.dataset_download import build_dataset
+from mlscratch.deep_learning.utils.utils import save_metrics, load_to_device, save_model
+from mlscratch.deep_learning.utils.plots import save_history_and_plots, plot_and_save_confusion_matrix
+from mlscratch.deep_learning.utils.metrics import compute_metrics_and_confmat
 
 from mlscratch.deep_learning.models.mlp import MLP
 from mlscratch.deep_learning.train import train
-from mlscratch.deep_learning.eval import eval
+from mlscratch.deep_learning.eval import eval, test_eval
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -28,21 +30,9 @@ def main():
   LOGGER.debug(os.environ)
   LOGGER.debug(args)
   
-  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  dtype = torch.bfloat16
-  
   torch.manual_seed(args.seed)
   
-  # Note: Initializing an **untrained** model
-  model = MLP(num_classes=62)
-  model = model.to(device)
-  
-  LOGGER.info(f"Training {sum(p.numel() for p in model.parameters())} model parameters")
-  
-  # model = torch.compile(model)
-  
-  LOGGER.info(f"Initialized model uses {get_mem_stats(device)['curr_alloc_gb']}gb")
-  
+  LOGGER.info(f"Downloading dataset from remote repo to local path {DATA_DIR}")
   train_dataset, test_dataset = build_dataset(data_dir=DATA_DIR)
   LOGGER.info(f"{len(train_dataset)} training samples")
   LOGGER.info(f"{len(test_dataset)} test samples")
@@ -54,6 +44,16 @@ def main():
                       
   LOGGER.info(f"{len(train_loader)} batches per epoch with image and label shape {image.shape}, {label.shape}")
   LOGGER.info(f"{len(test_loader)} batches per epoch with image and label shape {image.shape}, {label.shape}")
+  
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+  # Note: Initializing an **untrained** model
+  model = MLP(num_classes=62)
+  model = model.to(device)
+  
+  LOGGER.info(f"Training {sum(p.numel() for p in model.parameters())} model parameters")
+  # model = torch.compile(model)
+  LOGGER.info(f"Initialized model uses {get_mem_stats(device)['curr_alloc_gb']}gb")
   
   optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, fused=True)
   loss_fn = nn.CrossEntropyLoss()
@@ -71,11 +71,11 @@ def main():
   # =========
   # Train 
   # =========
-  results = {
+  history = {
     "train_loss": [],
     "train_acc": [],
-    "test_loss": [],
-    "test_acc": []
+    "val_loss": [],
+    "val_acc": []
   }
   
   for epoch in tqdm(range(args.num_epochs)):
@@ -101,21 +101,34 @@ def main():
       f"Epoch: {epoch+1} | "
       f"train_loss: {train_loss:.4f} | "
       f"train_acc: {train_acc:.4f} | "
-      f"test_loss: {val_loss:.4f} | "
-      f"test_acc: {val_acc:.4f}"
+      f"val_loss: {val_loss:.4f} | "
+      f"val_acc: {val_acc:.4f}"
     )
     
     # Update results dictionary
-    results["train_loss"].append(train_loss)
-    results["train_acc"].append(train_acc)
-    results["test_loss"].append(val_loss)
-    results["test_acc"].append(val_acc)
+    history["train_loss"].append(train_loss)
+    history["train_acc"].append(train_acc)
+    history["val_loss"].append(val_loss)
+    history["val_acc"].append(val_acc)
     
     if is_experiment:
       LOGGER.info(f"[OK] Saving checkpoint to {exp_dir} in ckpts.")
       save_model(model, exp_dir)
 
-  save_metrics(exp_dir, metrics_results=results)
+  # save_metrics(exp_dir, metrics_results=results)
+  save_history_and_plots(history=history, output_dir=exp_dir)
+  
+  # Load model for testing
+  model = MLP(num_classes=62)
+  model.load_state_dict(load_to_device(exp_dir, device))
+  
+  # Make predictions
+  y_true, y_pred = test_eval(model, test_loader, device)
+  
+  # Compute and save metrics
+  cm, metrics = compute_metrics_and_confmat(y_true, y_pred, exp_dir)
+  save_metrics(path=exp_dir, metrics_results=metrics, prefix="metrics")
+  plot_and_save_confusion_matrix(cm, exp_dir)
   
 def get_mem_stats(device):
   if device.type != "cuda":

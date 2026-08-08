@@ -3,6 +3,7 @@ Contains functions for training and testing a PyTorch model.
 """
 import torch
 
+from sklearn.metrics import confusion_matrix
 from tqdm.auto import tqdm
 from typing import Dict, List, Tuple, Optional
 # from torch.utils.tensorboard import SummaryWriter
@@ -42,3 +43,29 @@ def eval(
     test_acc = correct / total
     
     return test_loss, test_acc
+  
+
+def test_eval(
+  model: torch.nn.Module,
+  dataloader: torch.utils.data.DataLoader,
+  device: torch.device
+):
+  
+  model.eval()
+  
+  y_pred = []
+  y_true = []
+  
+  with torch.no_grad():
+    for images, labels in dataloader:
+      # output, labels = images.to(device), labels.to(device)
+      output = model(images)
+      
+      # Convert logits into class indices using argmax
+      preds = torch.argmax(output, dim=1) 
+      
+      y_pred.extend(preds.cpu().numpy()) # Save prediction
+      y_true.extend(labels.cpu().numpy()) # Save truth
+    
+  return y_true, y_pred
+  
