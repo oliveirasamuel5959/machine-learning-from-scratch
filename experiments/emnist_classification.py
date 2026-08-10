@@ -51,9 +51,14 @@ def main():
   model = MLP(num_classes=62)
   model = model.to(device)
   
-  LOGGER.info(f"Training {sum(p.numel() for p in model.parameters())} model parameters")
+  total_params = sum(param.numel() for param in model.parameters()) / 1e6
+  
+  LOGGER.info(f"Model name: {model.__name__} \t Total number of parameters: {total_params / 1e6}")
   # model = torch.compile(model)
   LOGGER.info(f"Initialized model uses {get_mem_stats(device)['curr_alloc_gb']}gb")
+
+  model_size_mb = (total_params * 4) / (1024 ** 2)
+  LOGGER.info(f"Model size: {model_size_mb:.2f} MB")
   
   optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, fused=True)
   loss_fn = nn.CrossEntropyLoss()
