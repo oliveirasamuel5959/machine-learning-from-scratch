@@ -30,6 +30,7 @@ build-backend = "hatchling.build"
 dev = [
     "ipykernel>=7.3.0",
     "jupyter>=1.1.1",
+    "nbconvert>=7.17.2",
 ]
 
 [tool.hatch.build.targets.wheel]
