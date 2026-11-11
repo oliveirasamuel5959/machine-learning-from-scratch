@@ -1,14 +1,15 @@
 import logging
 import sys
-from pathlib import Path
-from datetime import datetime
 from contextlib import contextmanager
+from datetime import datetime
+from pathlib import Path
 
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.status import Status
 
 console = Console()
+
 
 def get_logger(name: str, log_file: bool = True) -> logging.Logger:
     logger = logging.getLogger(name)
@@ -36,10 +37,12 @@ def get_logger(name: str, log_file: bool = True) -> logging.Logger:
         log_path = log_dir / f"{datetime.now().strftime('%Y%m%d')}.log"
         file_handler = logging.FileHandler(log_path, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(
-            fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        ))
+        file_handler.setFormatter(
+            logging.Formatter(
+                fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
         logger.addHandler(file_handler)
 
     return logger
